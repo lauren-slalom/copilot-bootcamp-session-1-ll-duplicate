@@ -26,6 +26,7 @@ db.exec(`
 // Insert some initial data
 const initialItems = ['Item 1', 'Item 2', 'Item 3'];
 const insertStmt = db.prepare('INSERT INTO items (name) VALUES (?)');
+const deleteStmt = db.prepare('DELETE FROM items WHERE id = ?');
 
 initialItems.forEach(item => {
   insertStmt.run(item);
@@ -60,6 +61,25 @@ app.post('/api/items', (req, res) => {
   } catch (error) {
     console.error('Error creating item:', error);
     res.status(500).json({ error: 'Failed to create item' });
+  }
+});
+
+app.delete('/api/items/:id', (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid item id' });
+    }
+
+    const info = deleteStmt.run(id);
+    if (info.changes === 0) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    res.status(500).json({ error: 'Failed to delete item' });
   }
 });
 
